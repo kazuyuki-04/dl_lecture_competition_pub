@@ -10,14 +10,19 @@ from termcolor import cprint
 from tqdm import tqdm
 
 from src.datasets import ThingsMEGDataset
-from src.models import BasicConvClassifier
+#from src.models import BasicConvClassifier
+#from src.models import HybridConvLSTMClassifier
+from src.models import DeeperConvClassifier
 from src.utils import set_seed
-
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def run(args: DictConfig):
     set_seed(args.seed)
     logdir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+
+    # logdirが存在しない場合は作成する
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
     
     if args.use_wandb:
         wandb.init(mode="online", dir=logdir, project="MEG-classification")
@@ -36,17 +41,23 @@ def run(args: DictConfig):
         test_set, shuffle=False, batch_size=args.batch_size, num_workers=args.num_workers
     )
 
+
     # ------------------
     #       Model
     # ------------------
-    model = BasicConvClassifier(
-        train_set.num_classes, train_set.seq_len, train_set.num_channels
+    # model = BasicConvClassifier(
+    #     train_set.num_classes, train_set.seq_len, train_set.num_channels, hid_dim=64
+    # ).to(args.device)
+
+    model = DeeperConvClassifier(
+        train_set.num_classes, train_set.seq_len, train_set.num_channels, hid_dim = 64, num_blocks=4
     ).to(args.device)
+
 
     # ------------------
     #     Optimizer
     # ------------------
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,weight_decay=args.weight_decay)
 
     # ------------------
     #   Start training

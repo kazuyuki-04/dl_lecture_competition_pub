@@ -1,11 +1,15 @@
-batch_size: 128
-epochs: 80
-lr: 0.001
+batch_size: 64
+epochs: 20
+#lr: 0.008
+lr: 0.01
+weight_decay: 0.00001
 
 device: cuda:0
 num_workers: 4
 seed: 1234
 use_wandb: False
+
+resample_type: oversample  # oversample, undersample, or None
 
 data_dir: data
 
